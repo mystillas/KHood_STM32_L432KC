@@ -21,7 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "ssd1306.h"
+#include "fonts.h"
+#include "test.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -93,7 +95,13 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+  SSD1306_Init (); // initialize the display
 
+  SSD1306_GotoXY (10,10); // goto 10, 10
+  SSD1306_Puts ("HELLO", &Font_11x18, 1); // print Hello
+  SSD1306_GotoXY (10, 30);
+  SSD1306_Puts ("WORLD !!", &Font_11x18, 1);
+  SSD1306_UpdateScreen(); // update screen
   /* USER CODE END 2 */
 
   /* Infinite loop */
