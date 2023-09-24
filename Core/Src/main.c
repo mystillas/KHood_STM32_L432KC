@@ -114,10 +114,23 @@ int main(void)
 	  if(HAL_GPIO_ReadPin(button_input_GPIO_Port, button_input_Pin))
 	  	  {
 		  HAL_GPIO_WritePin(led_output_GPIO_Port, led_output_Pin, GPIO_PIN_RESET);
+
+		  SSD1306_GotoXY (10, 30);
+		  SSD1306_Puts ("WORLD !!", &Font_11x18, 1);
+		  SSD1306_GotoXY (10,10); // goto 10, 10
+		  SSD1306_Puts ("        ", &Font_11x18, 1); // print Hello
+		  SSD1306_UpdateScreen(); // update screen
+
 	  	  }
 	  else
 		  {
 		  HAL_GPIO_WritePin(led_output_GPIO_Port, led_output_Pin, GPIO_PIN_SET);
+
+		  SSD1306_GotoXY (10, 30);
+		  SSD1306_Puts ("        ", &Font_11x18, 1); // print Hello
+		  SSD1306_GotoXY (10,10); // goto 10, 10
+		  SSD1306_Puts ("HELLO", &Font_11x18, 1); // print Hello
+		  SSD1306_UpdateScreen(); // update screen
 		  }
 
 	  HAL_Delay(100);
