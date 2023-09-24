@@ -1,0 +1,6 @@
+*.html
+*.elf
+*.bin
+.settings
+.cproject
+.project
