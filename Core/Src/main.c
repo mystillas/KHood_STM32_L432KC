@@ -24,6 +24,8 @@
 #include "ssd1306.h"
 #include "fonts.h"
 #include "test.h"
+#include "SHT31.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,16 +49,16 @@ I2C_HandleTypeDef hi2c1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
-/* USER CODE BEGIN PFP */
+/* USER CODE END PV */
 
+/* Private function prototypes -----------------------------------------------*/
+
+/* USER CODE BEGIN PFP */
+char *gcvt(double number, int ndigit, char *buf);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -71,7 +73,9 @@ static void MX_I2C1_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  float temperature, humidity;
+  char temp_buf[16];
+  char humid_buf[16];
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -97,11 +101,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
   SSD1306_Init (); // initialize the display
 
-  SSD1306_GotoXY (10,10); // goto 10, 10
-  SSD1306_Puts ("HELLO", &Font_11x18, 1); // print Hello
-  SSD1306_GotoXY (10, 30);
-  SSD1306_Puts ("WORLD !!", &Font_11x18, 1);
-  SSD1306_UpdateScreen(); // update screen
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -111,6 +110,19 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  SHT31_ReadTempHumidity(&temperature, &humidity);
+	  gcvt(temperature, 4, temp_buf);
+	  gcvt(humidity, 4, humid_buf);
+	  SSD1306_GotoXY (10,10); // goto 10, 10
+	  SSD1306_Puts ("temp:", &Font_11x18, 1);
+	  SSD1306_GotoXY (65,10); // goto 10, 10
+	  SSD1306_Puts (temp_buf, &Font_11x18, 1);
+	  SSD1306_GotoXY (10,30); // goto 10, 10
+	  SSD1306_Puts ("humid:", &Font_11x18, 1); // print Hello
+	  SSD1306_GotoXY (75, 30);
+	  SSD1306_Puts (humid_buf, &Font_11x18, 1);
+	  SSD1306_UpdateScreen(); // update screen
+	  /*
 	  if(HAL_GPIO_ReadPin(button_input_GPIO_Port, button_input_Pin))
 	  	  {
 		  HAL_GPIO_WritePin(led_output_GPIO_Port, led_output_Pin, GPIO_PIN_RESET);
@@ -132,7 +144,7 @@ int main(void)
 		  SSD1306_Puts ("HELLO", &Font_11x18, 1); // print Hello
 		  SSD1306_UpdateScreen(); // update screen
 		  }
-
+		*/
 	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
