@@ -44,6 +44,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
 I2C_HandleTypeDef hi2c1;
 
 UART_HandleTypeDef huart2;
@@ -56,7 +58,11 @@ static void MX_I2C1_Init(void);
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
-
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_USART2_UART_Init(void);
+static void MX_I2C1_Init(void);
+static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 char *gcvt(double number, int ndigit, char *buf);
 /* USER CODE END PFP */
@@ -73,7 +79,9 @@ char *gcvt(double number, int ndigit, char *buf);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  float temperature, humidity;
+  float temperature, humidity ;
+  u_int16_t analog_in_value;
+  char analog_buf[10];
   char temp_buf[16];
   char humid_buf[16];
   /* USER CODE END 1 */
@@ -98,6 +106,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   SSD1306_Init (); // initialize the display
 
@@ -110,17 +119,27 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  HAL_ADC_Start(&hadc1);
+	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+
+	  analog_in_value = HAL_ADC_GetValue(&hadc1);
+
 	  SHT31_ReadTempHumidity(&temperature, &humidity);
 	  gcvt(temperature, 4, temp_buf);
 	  gcvt(humidity, 4, humid_buf);
+	  gcvt(analog_in_value, 8, analog_buf);
 	  SSD1306_GotoXY (10,10); // goto 10, 10
 	  SSD1306_Puts ("temp:", &Font_11x18, 1);
 	  SSD1306_GotoXY (65,10); // goto 10, 10
 	  SSD1306_Puts (temp_buf, &Font_11x18, 1);
-	  SSD1306_GotoXY (10,30); // goto 10, 10
+	  /*SSD1306_GotoXY (10,30); // goto 10, 10
 	  SSD1306_Puts ("humid:", &Font_11x18, 1); // print Hello
 	  SSD1306_GotoXY (75, 30);
-	  SSD1306_Puts (humid_buf, &Font_11x18, 1);
+	  SSD1306_Puts (humid_buf, &Font_11x18, 1);*/
+	  SSD1306_GotoXY (10,30); // goto 10, 10
+	  SSD1306_Puts ("AnIn:", &Font_11x18, 1);
+	  SSD1306_GotoXY (75, 30);
+	  SSD1306_Puts (analog_buf, &Font_11x18, 1);
 	  SSD1306_UpdateScreen(); // update screen
 	  /*
 	  if(HAL_GPIO_ReadPin(button_input_GPIO_Port, button_input_Pin))
@@ -211,6 +230,64 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Common config
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.LowPowerAutoWait = DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc1.Init.OversamplingMode = DISABLE;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_8;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
   * @brief I2C1 Initialization Function
   * @param None
   * @retval None
@@ -226,7 +303,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00702681;
+  hi2c1.Init.Timing = 0x00300F38;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -310,7 +387,17 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(led_output_GPIO_Port, led_output_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA10 */
+  GPIO_InitStruct.Pin = GPIO_PIN_10;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : button_input_Pin */
   GPIO_InitStruct.Pin = button_input_Pin;
